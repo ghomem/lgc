@@ -1,0 +1,11 @@
+[Unit]
+Description=LGC
+After=syslog.target
+After=network.target
+
+[Service]
+ExecStart=/home/deployment/lgc/start-viral.sh 5008
+KillMode=control-group
+
+[Install]
+WantedBy=multi-user.target
