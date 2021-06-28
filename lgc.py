@@ -62,7 +62,7 @@ MMARGIN_WIDTH=50
 
 TEXT_WIDTH = 100
 TEXT_INTRO   = 'Use the mouse for initial selection and cursors for fine tuning:'
-TEXT_RESULTS = 'Inference from experimental results:'
+TEXT_RESULTS = '<b>Inference from experimental results:</b>'
 
 ### End of configuration
 
@@ -114,7 +114,8 @@ def update_data(attrname, old, new):
     test_risk_l  = round(test_risk_ci[0], 2)
     test_risk_r  = round(test_risk_ci[1], 2)
 
-    str_test_risk = mk_risk_str ('Risk on test group (%) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp: ', test_risk, test_risk_l, test_risk_r)
+    spacing = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp'
+    str_test_risk = mk_risk_str ('Risk on test group (%) ' + spacing + ': ', test_risk, test_risk_l, test_risk_r)
 
     # risk ratio
     # the form is phi * math.exp( +-z_value * parameter ) which is common to Katz and Walter methods
@@ -130,12 +131,30 @@ def update_data(attrname, old, new):
 
     # adverse effects threshold
     # to find at least one case at the current confidence level the probability must be this or higher
-    adv_effects_threshold = 1 - ( 1 - confidence_level )**( 1 / test.value ) 
-    str_adv_effects = 'Adverse effects detectability threshold (%): ' + str( round (adv_effects_threshold * 100, 2) )
+    adv_effects_threshold = (1 - ( 1 - confidence_level )**( 1 / test.value ) ) * 100
+    str_adv_effects = 'Adverse effects detectability threshold (%): ' + str( round (adv_effects_threshold, 2) )
 
     text_risk.text        = str_control_risk + '<br/>' + str_test_risk
     text_risk_ratio.text  = str_risk_ratio
     text_adv_effects.text = str_adv_effects
+
+    # produce warnings in case they are necessary
+    if 1 >= risk_ratio_l and 1 <= risk_ratio_r:
+        warning1 = 'The confidence interval for Relative Risk contains 1.'
+    else:
+        warning1 = ''
+
+    if adv_effects_threshold > control_risk:
+        warning2 = 'The adverse effects detectability threshold for the test group is above the risk level for the control group.'
+    else:
+        warning2 = ''
+
+    if warning1 or warning2:
+        str_warnings = '<b>Warnings:</b>\n\n' + warning1 + '&nbsp;' + warning2
+    else:
+        str_warnings = ''
+
+    text_warnings.text = str_warnings
 
 def reset_data():
 
@@ -175,6 +194,7 @@ text_results = Div(text=TEXT_RESULTS)
 text_risk        = Div(text='')
 text_risk_ratio  = Div(text='')
 text_adv_effects = Div(text='')
+text_warnings    = Div(text='')
 
 # update dynamic labels
 update_data('xxx', 0, 0)
@@ -192,7 +212,7 @@ middle_margin = Spacer(width=MMARGIN_WIDTH, height=400, width_policy='fixed', he
 
 # layout
 inputs  = column(text_intro, control, test, events_control, events_test, ci, button)
-results = column(text_results, text_risk, text_risk_ratio, text_adv_effects)
+results = column(text_results, text_risk, text_risk_ratio, text_adv_effects, text_warnings)
 
 curdoc().title = PAGE_TITLE
 
