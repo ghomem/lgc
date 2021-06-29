@@ -28,12 +28,12 @@ TEST_STEP  = 10
 # Proportions of positive events
 EVENTS_CONTROL_MIN   = 0.25 # this can never be zero for the control group, otherwise the would be nothing to investigate
 EVENTS_CONTROL_MAX   = 100
-EVENTS_CONTROL_START = 5
+EVENTS_CONTROL_START = 2.5
 EVENTS_CONTROL_STEP  = 0.25
 
 EVENTS_TEST_MIN   = 0
 EVENTS_TEST_MAX   = 100
-EVENTS_TEST_START = 2
+EVENTS_TEST_START = 1.25
 EVENTS_TEST_STEP  = 0.25
 
 # Confidence level
