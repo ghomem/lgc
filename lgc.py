@@ -127,7 +127,7 @@ def update_data(attrname, old, new):
     risk_ratio_l = round(phi * math.exp( -z_value * par ),2)
     risk_ratio_r = round(phi * math.exp( +z_value * par ),2)
 
-    str_risk_ratio = mk_risk_str ('Risk ratio : ', risk_ratio, risk_ratio_l, risk_ratio_r)
+    str_risk_ratio = mk_risk_str ('Relative risk: ', risk_ratio, risk_ratio_l, risk_ratio_r)
 
     # adverse effects threshold
     # to find at least one case at the current confidence level the probability must be this or higher
