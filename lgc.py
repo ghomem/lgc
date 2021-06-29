@@ -94,6 +94,16 @@ def get_par ( p0, p1, n0, n1, walter = False ):
         par = math.sqrt( 1/(x1 + 0.5) - 1/(n1 + 0.5) + 1/(x0 + 0.5) - 1/(n0 + 0.5) )
         return par
 
+# find interval overlaps, each interval is a list with 2 elements
+def get_overlap ( i1, i2 ):
+
+    a, b = max(i1[0], i2[0]), min(i1[-1], i2[-1])
+
+    if a > b:
+        return []
+    else:
+        return [a, b]
+
 # callback function for updating the data
 def update_data(attrname, old, new):
 
@@ -117,6 +127,17 @@ def update_data(attrname, old, new):
     spacing = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp'
     str_test_risk = mk_risk_str ('Risk on test group (%) ' + spacing + ': ', test_risk, test_risk_l, test_risk_r)
 
+    tmp_interval = get_overlap ( test_risk_ci, control_risk_ci )
+
+    if len(tmp_interval) > 0:
+        overlap_interval = [ round(tmp_interval[0],2), round(tmp_interval[1],2) ]
+        overlap_length = round( overlap_interval[1] - overlap_interval[0], 2)
+    else:
+        overlap_length = 0
+        overlap_interval = []
+
+    str_overlap_interval = 'Overlap: ' + str(overlap_length) + ' ' +  str(overlap_interval)
+
     # risk ratio
     # the form is phi * math.exp( +-z_value * parameter ) which is common to Katz and Walter methods
 
@@ -134,7 +155,7 @@ def update_data(attrname, old, new):
     adv_effects_threshold = (1 - ( 1 - confidence_level )**( 1 / test.value ) ) * 100
     str_adv_effects = 'Adverse effects detectability threshold (%): ' + str( round (adv_effects_threshold, 2) )
 
-    text_risk.text        = str_control_risk + '<br/>' + str_test_risk
+    text_risk.text        = str_control_risk + '<br/>' + str_test_risk + '<br/>' + str_overlap_interval
     text_risk_ratio.text  = str_risk_ratio
     text_adv_effects.text = str_adv_effects
 
