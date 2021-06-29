@@ -9,10 +9,14 @@ import numpy as np
 
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
-from bokeh.models import ColumnDataSource, Slider, TextInput, BoxAnnotation, HoverTool, Button, Spacer, Div
+from bokeh.models import ColumnDataSource, Slider, TextInput, BoxAnnotation, HoverTool, Button, Spacer, Div, Whisker, Range1d
 from bokeh.plotting import figure
 
 ### Configuration
+
+PLOT_RANGE_DELTA = 5
+
+GROUPS = ['Control group', 'Test Group']
 
 # Groups
 CONTROL_MIN   = 50
@@ -111,18 +115,20 @@ def update_data(attrname, old, new):
     z_value = stats.norm.isf( (1 - confidence_level) / 2 )
 
     # control group inference
-    control_risk    = round(events_control.value,2)
-    control_risk_ci = np.array( binomial_confidence(control_risk / 100, control.value, z=z_value) ) * 100
-    control_risk_l  = round(control_risk_ci[0], 2)
-    control_risk_r  = round(control_risk_ci[1], 2)
+    control_risk     = round(events_control.value,2)
+    control_risk_ci  = np.array( binomial_confidence(control_risk / 100, control.value, z=z_value) ) * 100
+    control_risk_l   = round(control_risk_ci[0], 2)
+    control_risk_r   = round(control_risk_ci[1], 2)
+    control_risk_err = control_risk_ci[1] - control_risk_ci[0]
 
     str_control_risk = mk_risk_str ('Risk on control group (%) : ', control_risk, control_risk_l, control_risk_r)
 
     # test group inference
-    test_risk    = round(events_test.value,2)
-    test_risk_ci = np.array( binomial_confidence(test_risk / 100, test.value, z=z_value) ) * 100
-    test_risk_l  = round(test_risk_ci[0], 2)
-    test_risk_r  = round(test_risk_ci[1], 2)
+    test_risk     = round(events_test.value,2)
+    test_risk_ci  = np.array( binomial_confidence(test_risk / 100, test.value, z=z_value) ) * 100
+    test_risk_l   = round(test_risk_ci[0], 2)
+    test_risk_r   = round(test_risk_ci[1], 2)
+    test_risk_err = test_risk_ci[1] - test_risk_ci[0]
 
     spacing = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp'
     str_test_risk = mk_risk_str ('Risk on test group (%) ' + spacing + ': ', test_risk, test_risk_l, test_risk_r)
@@ -177,6 +183,15 @@ def update_data(attrname, old, new):
 
     text_warnings.text = str_warnings
 
+    values = [ test_risk, control_risk           ]
+    error  = [ test_risk_err, control_risk_err   ]
+    upper  = [ x+e for x,e in zip(values, error) ]
+    lower  = [ x-e for x,e in zip(values, error) ]
+
+    source.data = dict(groups=GROUPS, values=values, upper=upper, lower=lower)
+
+    p.y_range.end = math.ceil( max ( test_risk + test_risk_err / 2, control_risk + control_risk_err / 2 )) + PLOT_RANGE_DELTA
+
 def reset_data():
 
     control.value = CONTROL_START
@@ -217,7 +232,33 @@ text_risk_ratio  = Div(text='')
 text_adv_effects = Div(text='')
 text_warnings    = Div(text='')
 
-# update dynamic labels
+test_risk     = 5
+test_risk_err = 2
+
+control_risk     = 1
+control_risk_err = 1
+
+# Plot
+
+values = [ test_risk, control_risk           ]
+error  = [ test_risk_err, control_risk_err   ]
+upper  = [ x+e for x,e in zip(values, error) ]
+lower  = [ x-e for x,e in zip(values, error) ]
+
+source = ColumnDataSource(data=dict(groups=GROUPS, values=values, upper=upper, lower=lower))
+
+p = figure(x_range=GROUPS, plot_height=350, toolbar_location=None)
+p.vbar(x='groups', top='values', width=0.5, source=source, legend="groups", line_color='white')
+
+p.add_layout( Whisker(source=source, base="groups", upper="upper", lower="lower", level="overlay") )
+
+p.xgrid.grid_line_color = None
+p.legend.visible = False
+
+# this makes it possible to update y_range on the callback, don't remove
+p.y_range=Range1d(0, math.ceil( max ( test_risk + test_risk_err / 2, control_risk + control_risk_err / 2 )) + PLOT_RANGE_DELTA )
+
+# update dynamic label
 update_data('xxx', 0, 0)
 
 # Assign widgets to the call back function
@@ -233,7 +274,7 @@ middle_margin = Spacer(width=MMARGIN_WIDTH, height=400, width_policy='fixed', he
 
 # layout
 inputs  = column(text_intro, control, test, events_control, events_test, ci, button)
-results = column(text_results, text_risk, text_risk_ratio, text_adv_effects, text_warnings)
+results = column(text_results, p, text_risk, text_risk_ratio, text_adv_effects, text_warnings)
 
 curdoc().title = PAGE_TITLE
 
