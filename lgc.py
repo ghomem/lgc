@@ -16,7 +16,7 @@ from bokeh.plotting import figure
 
 PLOT_RANGE_DELTA = 5
 
-GROUPS = ['Control group', 'Test Group']
+GROUPS = ['Test group', 'Control group']
 
 # Groups
 CONTROL_MIN   = 50
@@ -66,7 +66,7 @@ MMARGIN_WIDTH=50
 
 TEXT_WIDTH = 100
 TEXT_INTRO   = 'Use the mouse for initial selection and cursors for fine tuning:'
-TEXT_RESULTS = '<b>Inference from experimental results:</b>'
+TEXT_RESULTS = '<b>Inference from experimental results</b>'
 
 ### End of configuration
 
@@ -136,13 +136,14 @@ def update_data(attrname, old, new):
     tmp_interval = get_overlap ( test_risk_ci, control_risk_ci )
 
     if len(tmp_interval) > 0:
+        overlap_length   = tmp_interval[1] - tmp_interval[0]
         overlap_interval = [ round(tmp_interval[0],2), round(tmp_interval[1],2) ]
-        overlap_length = round( overlap_interval[1] - overlap_interval[0], 2)
     else:
         overlap_length = 0
         overlap_interval = []
 
-    str_overlap_interval = 'Overlap: ' + str(overlap_length) + ' ' +  str(overlap_interval)
+    str_overlap_interval = 'Overlap: ' + str(round(overlap_length,2)) + ' ' +  str(overlap_interval)
+    str_overlap_pct_test = 'Overlap % for test group: ' + str( round( (overlap_length / test_risk_err)*100, 2) )
 
     # risk ratio
     # the form is phi * math.exp( +-z_value * parameter ) which is common to Katz and Walter methods
@@ -161,7 +162,7 @@ def update_data(attrname, old, new):
     adv_effects_threshold = (1 - ( 1 - confidence_level )**( 1 / test.value ) ) * 100
     str_adv_effects = 'Adverse effects detectability threshold (%): ' + str( round (adv_effects_threshold, 2) )
 
-    text_risk.text        = str_control_risk + '<br/>' + str_test_risk + '<br/>' + str_overlap_interval
+    text_risk.text        = '<br/>' + str_test_risk + '<br/>' + str_control_risk + '<br/><br/>' + str_overlap_interval + '<br/>' + str_overlap_pct_test
     text_risk_ratio.text  = str_risk_ratio
     text_adv_effects.text = str_adv_effects
 
@@ -183,14 +184,13 @@ def update_data(attrname, old, new):
 
     text_warnings.text = str_warnings
 
-    values = [ test_risk, control_risk           ]
-    error  = [ test_risk_err, control_risk_err   ]
-    upper  = [ x+e for x,e in zip(values, error) ]
-    lower  = [ x-e for x,e in zip(values, error) ]
+    values = [ test_risk, control_risk     ]
+    upper  = [ test_risk_r, control_risk_r ]
+    lower  = [ test_risk_l, control_risk_l ]
 
     source.data = dict(groups=GROUPS, values=values, upper=upper, lower=lower)
 
-    p.y_range.end = math.ceil( max ( test_risk + test_risk_err / 2, control_risk + control_risk_err / 2 )) + PLOT_RANGE_DELTA
+    p.y_range.end = math.ceil( max (upper[0], upper[1]) ) + PLOT_RANGE_DELTA
 
 def reset_data():
 
@@ -232,31 +232,35 @@ text_risk_ratio  = Div(text='')
 text_adv_effects = Div(text='')
 text_warnings    = Div(text='')
 
-test_risk     = 5
-test_risk_err = 2
+# dummy values, they are updated after update_data runs
+test_risk   = 0
+test_risk_l = 0
+test_risk_r = 0
 
-control_risk     = 1
-control_risk_err = 1
+control_risk   = 0
+control_risk_l = 0
+control_risk_r = 0
 
 # Plot
 
-values = [ test_risk, control_risk           ]
-error  = [ test_risk_err, control_risk_err   ]
-upper  = [ x+e for x,e in zip(values, error) ]
-lower  = [ x-e for x,e in zip(values, error) ]
+
+values = [ test_risk, control_risk     ]
+upper  = [ test_risk_r, control_risk_r ]
+lower  = [ test_risk_l, control_risk_l ]
 
 source = ColumnDataSource(data=dict(groups=GROUPS, values=values, upper=upper, lower=lower))
 
 p = figure(x_range=GROUPS, plot_height=350, toolbar_location=None)
 p.vbar(x='groups', top='values', width=0.5, source=source, legend="groups", line_color='white')
 
-p.add_layout( Whisker(source=source, base="groups", upper="upper", lower="lower", level="overlay") )
+whisker = Whisker(source=source, base="groups", upper="upper", lower="lower", level="overlay")
+p.add_layout( whisker )
 
 p.xgrid.grid_line_color = None
 p.legend.visible = False
 
 # this makes it possible to update y_range on the callback, don't remove
-p.y_range=Range1d(0, math.ceil( max ( test_risk + test_risk_err / 2, control_risk + control_risk_err / 2 )) + PLOT_RANGE_DELTA )
+p.y_range=Range1d(-1, math.ceil( max (upper[0], upper[1]) ) + PLOT_RANGE_DELTA )
 
 # update dynamic label
 update_data('xxx', 0, 0)
@@ -273,7 +277,7 @@ left_margin   = Spacer(width=LMARGIN_WIDTH, height=400, width_policy='fixed', he
 middle_margin = Spacer(width=MMARGIN_WIDTH, height=400, width_policy='fixed', height_policy='auto')
 
 # layout
-inputs  = column(text_intro, control, test, events_control, events_test, ci, button)
+inputs  = column(text_intro, test, control, events_test, events_control, ci, button)
 results = column(text_results, p, text_risk, text_risk_ratio, text_adv_effects, text_warnings)
 
 curdoc().title = PAGE_TITLE
