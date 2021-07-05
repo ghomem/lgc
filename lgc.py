@@ -116,7 +116,7 @@ def update_data(attrname, old, new):
 
     # control group inference
     control_risk     = round(events_control.value,2)
-    control_risk_ci  = np.array( binomial_confidence(control_risk / 100, control.value, z=z_value) ) * 100
+    control_risk_ci  = np.array( binomial_confidence(control_risk / 100, control.value, z=z_value, method='clopper-pearson') ) * 100
     control_risk_l   = round(control_risk_ci[0], 2)
     control_risk_r   = round(control_risk_ci[1], 2)
     control_risk_err = control_risk_ci[1] - control_risk_ci[0]
@@ -125,7 +125,7 @@ def update_data(attrname, old, new):
 
     # test group inference
     test_risk     = round(events_test.value,2)
-    test_risk_ci  = np.array( binomial_confidence(test_risk / 100, test.value, z=z_value) ) * 100
+    test_risk_ci  = np.array( binomial_confidence(test_risk / 100, test.value, z=z_value, method='clopper-pearson') ) * 100
     test_risk_l   = round(test_risk_ci[0], 2)
     test_risk_r   = round(test_risk_ci[1], 2)
     test_risk_err = test_risk_ci[1] - test_risk_ci[0]
