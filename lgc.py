@@ -46,7 +46,12 @@ CI_MAX   = 99
 CI_START = 95
 CI_STEP  = 0.5
 
-# The Walter method is used when this variable is true. When it is false we use the simpler Katz method, but it crashes when the proportion for the test group is zero
+# choose the method for individual binomial CI calculation
+# options: clopper-pearson, wilson, jeffrey, normal
+# reference: https://github.com/nolanbconaway/binoculars
+INDIVIDUAL_CI_METHOD = 'clopper-pearson'
+
+# The Walter method for Relative Risk CI is used when this variable is true. When it is false we use the simpler Katz method, but it crashes when the proportion for the test group is zero
 # Katz et al, 1978 and Walter, 1975 are summarized here:
 # https://www.jstor.org/stable/2531848
 WALTER_CI = True
@@ -116,7 +121,7 @@ def update_data(attrname, old, new):
 
     # control group inference
     control_risk     = round(events_control.value,2)
-    control_risk_ci  = np.array( binomial_confidence(control_risk / 100, control.value, z=z_value, method='clopper-pearson') ) * 100
+    control_risk_ci  = np.array( binomial_confidence(control_risk / 100, control.value, z=z_value, method=INDIVIDUAL_CI_METHOD) ) * 100
     control_risk_l   = round(control_risk_ci[0], 2)
     control_risk_r   = round(control_risk_ci[1], 2)
     control_risk_err = control_risk_ci[1] - control_risk_ci[0]
@@ -125,7 +130,7 @@ def update_data(attrname, old, new):
 
     # test group inference
     test_risk     = round(events_test.value,2)
-    test_risk_ci  = np.array( binomial_confidence(test_risk / 100, test.value, z=z_value, method='clopper-pearson') ) * 100
+    test_risk_ci  = np.array( binomial_confidence(test_risk / 100, test.value, z=z_value, method=INDIVIDUAL_CI_METHOD) ) * 100
     test_risk_l   = round(test_risk_ci[0], 2)
     test_risk_r   = round(test_risk_ci[1], 2)
     test_risk_err = test_risk_ci[1] - test_risk_ci[0]
