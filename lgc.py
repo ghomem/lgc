@@ -46,12 +46,12 @@ TEST_FINE_STEP  = 1
 EVENTS_CONTROL_MIN   = 0.25 # this can never be zero for the control group, otherwise the would be nothing to investigate
 EVENTS_CONTROL_MAX   = 100
 EVENTS_CONTROL_START = 3
-EVENTS_CONTROL_STEP  = 0.25
+EVENTS_CONTROL_STEP  = 0.05
 
 EVENTS_TEST_MIN   = 0
 EVENTS_TEST_MAX   = 100
 EVENTS_TEST_START = 1.5
-EVENTS_TEST_STEP  = 0.25
+EVENTS_TEST_STEP  = 0.05
 
 # Confidence level
 CI_MIN   = 60
