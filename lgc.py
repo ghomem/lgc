@@ -388,6 +388,7 @@ text_risk         = Div(text='')
 text_risk_ratio   = Div(text='')
 text_adv_effects  = Div(text='')
 text_warnings     = Div(text='')
+text_info         = Div(text='Technical info at <a href="https://github.com/ghomem/lgc">github.com/ghomem/lgc</a>')
 
 # dummy values, they are updated after update_data runs
 test_risk   = 0
@@ -434,7 +435,7 @@ middle_margin = Spacer(width=MMARGIN_WIDTH, height=400, width_policy='fixed', he
 
 # layout
 inputs  = column(text_intro, test, control, test_fine, control_fine, events_test, events_control, ci, button)
-results = column(text_results, p, text_participants, text_risk, text_risk_ratio, text_adv_effects, text_warnings)
+results = column(text_results, p, text_participants, text_risk, text_risk_ratio, text_adv_effects, text_info, text_warnings)
 
 curdoc().title = PAGE_TITLE
 
