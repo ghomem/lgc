@@ -435,7 +435,7 @@ middle_margin = Spacer(width=MMARGIN_WIDTH, height=400, width_policy='fixed', he
 
 # layout
 inputs  = column(text_intro, test, control, test_fine, control_fine, events_test, events_control, ci, button)
-results = column(text_results, p, text_participants, text_risk, text_risk_ratio, text_adv_effects, text_info, text_warnings)
+results = column(text_results, p, text_participants, text_risk, text_risk_ratio, text_adv_effects, text_warnings, text_info)
 
 curdoc().title = PAGE_TITLE
 
