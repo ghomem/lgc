@@ -32,16 +32,16 @@ TEST_STEP  = 10
 # Proportions of positive events
 EVENTS_CONTROL_MIN   = 0.25 # this can never be zero for the control group, otherwise the would be nothing to investigate
 EVENTS_CONTROL_MAX   = 100
-EVENTS_CONTROL_START = 2.5
+EVENTS_CONTROL_START = 3
 EVENTS_CONTROL_STEP  = 0.25
 
 EVENTS_TEST_MIN   = 0
 EVENTS_TEST_MAX   = 100
-EVENTS_TEST_START = 1.25
+EVENTS_TEST_START = 1.5
 EVENTS_TEST_STEP  = 0.25
 
 # Confidence level
-CI_MIN   = 90
+CI_MIN   = 60
 CI_MAX   = 99
 CI_START = 95
 CI_STEP  = 0.5
@@ -113,6 +113,101 @@ def get_overlap ( i1, i2 ):
     else:
         return [a, b]
 
+# return the pvalue for the risk ratio
+
+# The results match what can be seen here:
+# https://www.scistat.com/statisticaltests/relative_risk.php
+#
+# test case:
+# get_pvalue ( 0.03, 0.015, 1000, 1000) # must return 0.0268
+
+def get_pvalue ( p0, p1, n0, n1 ):
+
+    # the pvalue for the risk ratio is the probability that we find a value that is as distant or more distant from 1 than the observed ratio is,
+    # if the actual ratio is 1; the null hyphotesis H0 is precisely that the actual ratio is 1
+
+    # the log of  ratio of binomials B(p1, n1) and B(p0, n0) is ~ a normal of
+    #mean  = math.log( p1 / p0 )
+    #stdev = math.sqrt( ( ( 1/p0 - 1 ) / n0 ) + ( ( 1/p1 -1 ) / n1 ) )
+
+    # but the null hyphotesis says that the ratio is 1 so
+    mean  = math.log(1)
+
+    # stdev is calculated as usual
+    stdev = math.sqrt( ( ( 1/p0 - 1 ) / n0 ) + ( ( 1/p1 -1 ) / n1 ) )
+
+    # formulation in terms of variable RR
+    # P ( rr != 1 ) = 2 * min ( P( rr >= observed_rr | H0 ), P( rr <= observerd_rr | H0 ) )
+
+    # converted to logarithms where the null hyphotesis, H0, is simply that log(rr) = 0
+    # P ( log(rr) != 0 ) = 2 * min ( P( log(rr) >= log(observed_rr) | H0 ), P ( log(rr) <= log(observerd_rr) | H0 ) )
+
+    observed_rr = p1 / p0
+    P_left  = stats.norm.cdf( math.log(observed_rr), mean, stdev )
+    P_right = 1 - P_left
+
+    #print( observed_rr, math.log(observed_rr), P_left, P_right )
+    p_value = 2 * min(P_right,P_left)
+
+    return round (p_value, 4)
+
+# Altman method, valid for 60 patients or more
+# https://www.bmj.com/content/bmj/343/bmj.d2304.full.pdf
+#
+# The purpose of this method is just trying to find the p-value if we don't have the detailed data.
+# The value oscilates as little bit as the CI changes but remains around reasonable values
+#
+# test case:
+# get_pvalue2(0.81, 0.7, 0.94, 0.95 # must return 0.0051
+
+def get_pvalue2 ( risk_ratio_obs, risk_ratio_l, risk_ratio_r, confidence_level ):
+
+    # would be 1.96 for confidence_level at 0.95
+    z_value = stats.norm.isf( (1 - confidence_level) / 2 )
+
+    # contants present in the linked article
+    a = -0.717
+    b = -0.416
+
+    log_risk_ratio_l   = math.log(risk_ratio_l)
+    log_risk_ratio_r   = math.log(risk_ratio_r)
+    log_risk_ratio_obs = math.log(risk_ratio_obs)
+
+    std_err = (log_risk_ratio_r - log_risk_ratio_l) / ( 2*z_value )
+
+    z_stat = abs(log_risk_ratio_obs / std_err)
+
+    p_value = math.exp( a*z_stat + b*z_stat**2 )
+
+    return round (p_value, 4)
+
+# determine the highest confidence interval that does not contain 1, return 1 - alpha
+def get_cvalue ( p0, p1, n0, n1, base_value, step ):
+
+    contains = False
+    j = 0
+    while contains == False:
+
+        current_confidence = base_value + j*step
+        z_value = stats.norm.isf( (1 - current_confidence) / 2 )
+        j = j +1
+        # risk ratio
+        # the form is phi * math.exp( +-z_value * parameter ) which is common to Katz and Walter methods
+
+        phi = get_phi (p0, p1, n0, n1, WALTER_CI)
+        par = get_par (p0, p1, n0 ,n1, WALTER_CI)
+
+        risk_ratio   = p1 / p0
+        risk_ratio_l = phi * math.exp( -z_value * par )
+        risk_ratio_r = phi * math.exp( +z_value * par )
+
+        if 1 >= risk_ratio_l and 1 <= risk_ratio_r:
+            contains = True
+            c_value  = 1 - (current_confidence - step)
+            #print('returning at confidence ', current_confidence - step, c_value)
+
+    return round( c_value, 4 )
+
 # callback function for updating the data
 def update_data(attrname, old, new):
 
@@ -126,7 +221,7 @@ def update_data(attrname, old, new):
     control_risk_r   = round(control_risk_ci[1], 2)
     control_risk_err = control_risk_ci[1] - control_risk_ci[0]
 
-    str_control_risk = mk_risk_str ('Risk on control group (%) : ', control_risk, control_risk_l, control_risk_r)
+    str_control_risk = mk_risk_str ('Risk on control group (%): ', control_risk, control_risk_l, control_risk_r)
 
     # test group inference
     test_risk     = round(events_test.value,2)
@@ -135,7 +230,7 @@ def update_data(attrname, old, new):
     test_risk_r   = round(test_risk_ci[1], 2)
     test_risk_err = test_risk_ci[1] - test_risk_ci[0]
 
-    spacing = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp'
+    spacing = '&nbsp;&nbsp;&nbsp;&nbsp;'
     str_test_risk = mk_risk_str ('Risk on test group (%) ' + spacing + ': ', test_risk, test_risk_l, test_risk_r)
 
     tmp_interval = get_overlap ( test_risk_ci, control_risk_ci )
@@ -167,8 +262,20 @@ def update_data(attrname, old, new):
     adv_effects_threshold = (1 - ( 1 - confidence_level )**( 1 / test.value ) ) * 100
     str_adv_effects = 'Adverse effects detectability threshold (%): ' + str( round (adv_effects_threshold, 2) )
 
+    str_pvalue1 = 'p-value: ' + str( get_pvalue(control_risk/100, test_risk/100, control.value, test.value) )
+    str_pvalue2 = 'p-value2: ' + str( get_pvalue2(risk_ratio, risk_ratio_l, risk_ratio_r, confidence_level) )
+
+    #str_pvalue = str_pvalue1 + '<br/>' + str_pvalue2
+    str_pvalue = str_pvalue1
+
+    c_value = get_cvalue ( control_risk/100, test_risk/100, control.value, test.value, 0.50, 0.005)
+
+    str_cvalue     = 'c-value: ' + str( c_value )
+    highest_ci    = round ((1 - c_value), 4)
+    str_cvalue_ext = 'highest CI: '  + str( highest_ci ) + ' / ' + str ( highest_ci*100 ) + '%'
+
     text_risk.text        = '<br/>' + str_test_risk + '<br/>' + str_control_risk + '<br/><br/>' + str_overlap_interval + '<br/>' + str_overlap_pct_test
-    text_risk_ratio.text  = str_risk_ratio
+    text_risk_ratio.text  = str_risk_ratio + '<br/>' + str_pvalue + '<br/>' + str_cvalue + '<br/>' + str_cvalue_ext
     text_adv_effects.text = str_adv_effects
 
     # produce warnings in case they are necessary
