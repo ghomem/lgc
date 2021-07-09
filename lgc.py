@@ -48,7 +48,7 @@ EVENTS_CONTROL_MAX   = 100
 EVENTS_CONTROL_START = 3
 EVENTS_CONTROL_STEP  = 0.05
 
-EVENTS_TEST_MIN   = 0
+EVENTS_TEST_MIN   = 0.05
 EVENTS_TEST_MAX   = 100
 EVENTS_TEST_START = 1.5
 EVENTS_TEST_STEP  = 0.05
@@ -281,7 +281,7 @@ def update_data(attrname, old, new):
     risk_ratio_l = round(phi * math.exp( -z_value * par ),2)
     risk_ratio_r = round(phi * math.exp( +z_value * par ),2)
 
-    str_risk_ratio = mk_risk_str ('Relative risk: ', risk_ratio, risk_ratio_l, risk_ratio_r)
+    str_risk_ratio = mk_risk_str ('<b>Relative risk: </b>', risk_ratio, risk_ratio_l, risk_ratio_r)
 
     # adverse effects threshold
     # to find at least one case at the current confidence level the probability must be this or higher
