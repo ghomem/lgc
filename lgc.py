@@ -416,6 +416,11 @@ p.add_layout( whisker )
 p.xgrid.grid_line_color = None
 p.legend.visible = False
 
+# disable interaction
+p.toolbar.active_drag   = None
+p.toolbar.active_scroll = None
+p.toolbar.active_tap    = None
+
 # this makes it possible to update y_range on the callback, don't remove
 p.y_range=Range1d(-1, math.ceil( max (upper[0], upper[1]) ) + PLOT_RANGE_DELTA )
 
