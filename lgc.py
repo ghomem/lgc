@@ -93,11 +93,11 @@ TEXT_RESULTS = '<b>Inference from experimental results</b>'
 
 ### Functions
 
-def mk_risk_str ( title, risk, risk_l, risk_r ):
+def mk_interval_str ( title, value, value_l, value_r ):
 
-    str_risk = title + str(risk) + ' (' +  str(risk_l) + '-' + str(risk_r) + ')'
+    str_interval = title + str(value) + ' (' +  str(value_l) + '  -  ' + str(value_r) + ')'
 
-    return str_risk
+    return str_interval
 
 def get_phi ( p0, p1, n0, n1, walter = False ):
 
@@ -247,7 +247,7 @@ def update_data(attrname, old, new):
     control_risk_r   = round(control_risk_ci[1], 2)
     control_risk_err = control_risk_ci[1] - control_risk_ci[0]
 
-    str_control_risk = mk_risk_str ('Risk on control group (%): ', control_risk, control_risk_l, control_risk_r)
+    str_control_risk = mk_interval_str ('Risk on control group (%): ', control_risk, control_risk_l, control_risk_r)
 
     # test group inference
     test_risk     = round(events_test.value,2)
@@ -257,7 +257,7 @@ def update_data(attrname, old, new):
     test_risk_err = test_risk_ci[1] - test_risk_ci[0]
 
     spacing = '&nbsp;&nbsp;&nbsp;&nbsp;'
-    str_test_risk = mk_risk_str ('Risk on test group (%) ' + spacing + ': ', test_risk, test_risk_l, test_risk_r)
+    str_test_risk = mk_interval_str ('Risk on test group (%) ' + spacing + ': ', test_risk, test_risk_l, test_risk_r)
 
     tmp_interval = get_overlap ( test_risk_ci, control_risk_ci )
 
@@ -281,7 +281,7 @@ def update_data(attrname, old, new):
     risk_ratio_l = round(phi * math.exp( -z_value * par ),2)
     risk_ratio_r = round(phi * math.exp( +z_value * par ),2)
 
-    str_risk_ratio = mk_risk_str ('<b>Relative risk: </b>', risk_ratio, risk_ratio_l, risk_ratio_r)
+    str_risk_ratio = mk_interval_str ('<b>Relative risk: </b>', risk_ratio, risk_ratio_l, risk_ratio_r)
 
     # adverse effects threshold
     # to find at least one case at the current confidence level the probability must be this or higher
@@ -311,9 +311,16 @@ def update_data(attrname, old, new):
         str_cvalue     = indent + 'c-value: ' + '<= 0.0001'
         str_cvalue_ext = indent + 'highest CI: ' + '>= 0.9999' + ' / ' + '>= 99.99%'
 
+    efficacy   = round((1 - risk_ratio  )*100,2)
+    efficacy_l = round((1 - risk_ratio_r)*100,2)
+    efficacy_r = round((1 - risk_ratio_l)*100,2)
+
+    str_efficacy = mk_interval_str( '<b>Efficacy (%): </b>',efficacy, efficacy_l, efficacy_r )
+
     text_participants.text = '<br/>' + str_test_participants + '<br/>' + str_control_participants
     text_risk.text         = str_test_risk + '<br/>' + str_control_risk + '<br/><br/>' + str_overlap_interval + '<br/>' + str_overlap_pct_test
     text_risk_ratio.text   = str_risk_ratio + '<br/>' + str_pvalue + '<br/>' + str_cvalue + '<br/>' + str_cvalue_ext
+    text_efficacy.text     = str_efficacy
     text_adv_effects.text  = str_adv_effects
 
     # produce warnings in case they are necessary
@@ -386,6 +393,7 @@ text_results = Div(text=TEXT_RESULTS)
 text_participants = Div(text='')
 text_risk         = Div(text='')
 text_risk_ratio   = Div(text='')
+text_efficacy     = Div(text='')
 text_adv_effects  = Div(text='')
 text_warnings     = Div(text='')
 text_info         = Div(text='Technical info at <a href="https://github.com/ghomem/lgc">github.com/ghomem/lgc</a>')
@@ -440,7 +448,7 @@ middle_margin = Spacer(width=MMARGIN_WIDTH, height=400, width_policy='fixed', he
 
 # layout
 inputs  = column(text_intro, test, control, test_fine, control_fine, events_test, events_control, ci, button)
-results = column(text_results, p, text_participants, text_risk, text_risk_ratio, text_adv_effects, text_warnings, text_info)
+results = column(text_results, p, text_participants, text_risk, text_risk_ratio, text_efficacy, text_adv_effects, text_warnings, text_info)
 
 curdoc().title = PAGE_TITLE
 
