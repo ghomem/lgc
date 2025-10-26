@@ -395,7 +395,7 @@ text_risk         = Div(text='')
 text_risk_ratio   = Div(text='')
 text_efficacy     = Div(text='')
 text_adv_effects  = Div(text='')
-text_warnings     = Div(text='', style='color:red')
+text_warnings     = Div(text='', style=Styles(color="red"))
 text_info         = Div(text='Technical info at <a href="https://github.com/ghomem/lgc">github.com/ghomem/lgc</a>')
 
 # dummy values, they are updated after update_data runs
