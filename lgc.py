@@ -9,7 +9,7 @@ import numpy as np
 
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
-from bokeh.models import ColumnDataSource, Slider, TextInput, BoxAnnotation, HoverTool, Button, Spacer, Div, Whisker, Range1d
+from bokeh.models import ColumnDataSource, Slider, TextInput, BoxAnnotation, HoverTool, Button, Spacer, Div, Whisker, Range1d, Styles
 from bokeh.plotting import figure
 
 ### Configuration
