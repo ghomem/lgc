@@ -306,10 +306,10 @@ def update_data(attrname, old, new):
 
     if ( c_value > 0.0001 ):
         str_cvalue     = indent + 'c-value: ' + str( c_value )
-        str_cvalue_ext = indent + 'highest CI: ' + str( highest_ci ) + ' / ' + str ( highest_ci_pct ) + '%'
+        str_cvalue_ext = indent + 'highest CL: ' + str( highest_ci ) + ' / ' + str ( highest_ci_pct ) + '%'
     else:
         str_cvalue     = indent + 'c-value: ' + '<= 0.0001'
-        str_cvalue_ext = indent + 'highest CI: ' + '>= 0.9999' + ' / ' + '>= 99.99%'
+        str_cvalue_ext = indent + 'highest CL: ' + '>= 0.9999' + ' / ' + '>= 99.99%'
 
     efficacy   = round((1 - risk_ratio  )*100,2)
     efficacy_l = round((1 - risk_ratio_r)*100,2)
@@ -325,7 +325,7 @@ def update_data(attrname, old, new):
 
     # produce warnings in case they are necessary
     if 1 >= risk_ratio_l and 1 <= risk_ratio_r:
-        warning1 = 'The confidence interval for Relative Risk contains 1.'
+        warning1 = '<style="color:red">The confidence interval for Relative Risk contains 1.</style>'
     else:
         warning1 = ''
 
