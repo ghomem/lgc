@@ -306,10 +306,10 @@ def update_data(attrname, old, new):
 
     if ( c_value > 0.0001 ):
         str_cvalue     = indent + 'c-value: ' + str( c_value )
-        str_cvalue_ext = indent + 'highest CI: ' + str( highest_ci ) + ' / ' + str ( highest_ci_pct ) + '%'
+        str_cvalue_ext = indent + 'highest CL: ' + str( highest_ci ) + ' / ' + str ( highest_ci_pct ) + '%'
     else:
         str_cvalue     = indent + 'c-value: ' + '<= 0.0001'
-        str_cvalue_ext = indent + 'highest CI: ' + '>= 0.9999' + ' / ' + '>= 99.99%'
+        str_cvalue_ext = indent + 'highest CL: ' + '>= 0.9999' + ' / ' + '>= 99.99%'
 
     efficacy   = round((1 - risk_ratio  )*100,2)
     efficacy_l = round((1 - risk_ratio_r)*100,2)
@@ -395,7 +395,7 @@ text_risk         = Div(text='')
 text_risk_ratio   = Div(text='')
 text_efficacy     = Div(text='')
 text_adv_effects  = Div(text='')
-text_warnings     = Div(text='')
+text_warnings     = Div(text='', style={'color': 'red'})
 text_info         = Div(text='Technical info at <a href="https://github.com/ghomem/lgc">github.com/ghomem/lgc</a>')
 
 # dummy values, they are updated after update_data runs
